@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tricog Bridge — Clickable Wireframe (Postpaid)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #ececec;
+    color: #2a2a2a;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  a { color: #2c5fa8; text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Top bar (always visible) ---------- */
+  .topbar {
+    background: #1f2937;
+    color: #f3f4f6;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar .brand { font-weight: 600; letter-spacing: .3px; }
+  .topbar .crumb { color: #9ca3af; }
+  .topbar .crumb b { color: #f9fafb; }
+  .topbar select {
+    margin-left: auto;
+    background: #374151;
+    color: #f9fafb;
+    border: 1px solid #4b5563;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+  }
+
+  /* ---------- Frame layout ---------- */
+  .frame {
+    max-width: 1100px;
+    margin: 16px auto;
+    background: #fff;
+    border: 1px solid #c4c4c4;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    min-height: 640px;
+    display: flex;
+  }
+  .frame.no-sidebar { display: block; }
+
+  /* ---------- Sidebar (Admin UI) ---------- */
+  .sidebar {
+    width: 220px;
+    background: #f7f7f7;
+    border-right: 1px solid #d8d8d8;
+    padding: 14px 0;
+    flex-shrink: 0;
+  }
+  .sidebar .grp { padding: 10px 16px 4px; font-size: 10px; text-transform: uppercase; color: #888; letter-spacing: .8px; }
+  .sidebar a {
+    display: block;
+    padding: 7px 16px;
+    color: #333;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+  }
+  .sidebar a:hover { background: #eee; text-decoration: none; }
+  .sidebar a.active { background: #e6efff; border-left-color: #2c5fa8; color: #1d4385; font-weight: 600; }
+  .sidebar .install-id {
+    margin: 14px 16px 0;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px dashed #ccc;
+    font-size: 11px;
+    color: #666;
+  }
+  .sidebar .install-id b { display: block; color: #333; margin-bottom: 2px; font-size: 10px; }
+
+  /* ---------- Main content ---------- */
+  .main {
+    flex: 1;
+    padding: 24px 32px;
+    min-width: 0;
+  }
+  .main.center {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 60px 32px;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 17px; font-weight: 600; margin: 20px 0 10px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 14px 0 6px; color: #444; }
+  p.subtle { color: #666; margin-bottom: 18px; }
+
+  /* ---------- Wizard step header ---------- */
+  .stepper {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .stepper .s {
+    background: #ececec;
+    color: #888;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    border: 1px solid #d4d4d4;
+  }
+  .stepper .s.done { background: #e6efff; color: #1d4385; border-color: #b8cdf0; }
+  .stepper .s.cur { background: #2c5fa8; color: #fff; border-color: #2c5fa8; font-weight: 600; }
+
+  /* ---------- Form bits ---------- */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+  .field .hint { font-size: 11px; color: #777; margin-top: 3px; }
+  .field input[type="text"], .field input[type="password"], .field select, .field textarea {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid #c0c0c0;
+    background: #fafafa;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 3px;
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .field.row { display: flex; gap: 12px; }
+  .field.row > div { flex: 1; }
+
+  .checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #d8d8d8;
+    background: #fafafa;
+    margin-bottom: 8px;
+  }
+  .checkbox input { margin-top: 3px; }
+  .checkbox .lbl { font-weight: 600; }
+  .checkbox .copy { font-size: 11px; color: #666; margin-top: 2px; }
+
+  /* ---------- Buttons ---------- */
+  .btnrow {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #ececec;
+  }
+  .btnrow.right { justify-content: flex-end; }
+  .btn {
+    padding: 8px 16px;
+    border: 1px solid #2c5fa8;
+    background: #2c5fa8;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 3px;
+  }
+  .btn:hover { background: #214a85; }
+  .btn.ghost { background: #fff; color: #2c5fa8; }
+  .btn.ghost:hover { background: #eef3fb; }
+  .btn.warn { background: #c0392b; border-color: #c0392b; }
+  .btn.warn:hover { background: #962c20; }
+  .btn.muted { background: #e0e0e0; border-color: #c0c0c0; color: #444; }
+  .btn.muted:hover { background: #d0d0d0; }
+  .btn.sm { padding: 5px 11px; font-size: 12px; }
+
+  /* ---------- Cards / panels ---------- */
+  .panel {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border-radius: 3px;
+  }
+  .panel.dashed { border-style: dashed; background: #fff; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; font-size: 12px; }
+  .kv .k { color: #777; }
+  .kv .v { color: #222; }
+
+  /* ---------- Tables ---------- */
+  table.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .tbl th, .tbl td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid #ececec;
+  }
+  .tbl th {
+    background: #f3f3f3;
+    font-weight: 600;
+    color: #555;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .tbl tr:hover td { background: #fafafa; cursor: pointer; }
+
+  /* ---------- Badges ---------- */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .b-live { background: #d4edda; color: #155724; }
+  .b-disabled { background: #e0e0e0; color: #555; }
+  .b-warn { background: #fff3cd; color: #856404; }
+  .b-fail { background: #f8d7da; color: #721c24; }
+  .b-archived { background: #e3e3f5; color: #4a4a87; }
+  .b-info { background: #cfe2f3; color: #1c4a78; }
+
+  /* ---------- Wizard pipeline indicator ---------- */
+  .pipeline {
+    display: flex;
+    gap: 4px;
+    margin: 12px 0;
+  }
+  .pipeline .step {
+    flex: 1;
+    padding: 10px 8px;
+    background: #f3f3f3;
+    border: 1px solid #d8d8d8;
+    text-align: center;
+    font-size: 11px;
+  }
+  .pipeline .step.ok { background: #d4edda; border-color: #b6dec0; color: #155724; }
+  .pipeline .step.err { background: #f8d7da; border-color: #ecb6bb; color: #721c24; }
+  .pipeline .step.run { background: #fff3cd; border-color: #f0e0a0; color: #856404; }
+
+  /* ---------- Misc ---------- */
+  .placeholder {
+    border: 1px dashed #c0c0c0;
+    background: #fafafa;
+    padding: 18px;
+    color: #888;
+    text-align: center;
+    font-style: italic;
+    margin: 8px 0;
+  }
+  .alert {
+    padding: 10px 12px;
+    border: 1px solid #f0e0a0;
+    background: #fff8e1;
+    color: #856404;
+    margin-bottom: 14px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .alert.err { background: #f8d7da; border-color: #ecb6bb; color: #721c24; }
+  .alert.ok { background: #d4edda; border-color: #b6dec0; color: #155724; }
+  .alert.info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .toolbar .spacer { flex: 1; }
+  .toolbar input[type=text], .toolbar select {
+    padding: 6px 9px; border: 1px solid #c0c0c0; font-size: 12px; border-radius: 3px; background: #fff;
+  }
+  code, .mono { font-family: "Menlo", "Monaco", "Consolas", monospace; font-size: 11px; background: #f3f3f3; padding: 1px 4px; border-radius: 2px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ---------- Screen visibility ---------- */
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .screen.active.center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ---------- Index drawer at bottom ---------- */
+  .index {
+    max-width: 1100px;
+    margin: 16px auto 32px;
+    padding: 14px 20px;
+    background: #fff;
+    border: 1px solid #c4c4c4;
+    font-size: 12px;
+  }
+  .index h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: #555; margin-bottom: 6px; }
+  .index .group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 12px; margin-bottom: 10px; }
+  .index a { color: #2c5fa8; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- TOP BAR -->
+<!-- ============================================================ -->
+<div class="topbar">
+  <span class="brand">Tricog Bridge</span>
+  <span class="crumb" id="crumb">Wireframe — Postpaid v1</span>
+  <select id="screenJump">
+    <optgroup label="Install Wizard">
+      <option value="welcome">1. Welcome</option>
+      <option value="eula">2. EULA</option>
+      <option value="cloudmode">3. Cloud Mode</option>
+      <option value="apikey">4. API Key Entry</option>
+      <option value="prefs">5. Preferences</option>
+      <option value="plugins">6. Plugins</option>
+      <option value="installdone">7. Install Complete</option>
+    </optgroup>
+    <optgroup label="Admin UI">
+      <option value="devices">Devices List</option>
+      <option value="dev1">Add Device — Step 1 (Name)</option>
+      <option value="dev2">Add Device — Step 2 (Profile)</option>
+      <option value="dev3">Add Device — Step 3 (Identity)</option>
+      <option value="dev4">Add Device — Step 4 (Anonymization)</option>
+      <option value="dev5">Add Device — Step 5 (Cloud Mode)</option>
+      <option value="dev6">Add Device — Step 6 (Destinations)</option>
+      <option value="dev7">Add Device — Step 7 (Review)</option>
+      <option value="dev8">Add Device — Step 8 (Dry-Run)</option>
+      <option value="dev9">Add Device — Step 9 (Go Live)</option>
+      <option value="devdetail">Device Detail</option>
+      <option value="devedit">Edit Device</option>
+      <option value="failed">Failed Deliveries</option>
+      <option value="audit">Audit Log</option>
+      <option value="account">Account &amp; Data</option>
+    </optgroup>
+  </select>
+</div>
+
+<!-- ============================================================ -->
+<!-- INSTALL WIZARD (no sidebar) -->
+<!-- ============================================================ -->
+
+<!-- 1. Welcome -->
+<div class="frame no-sidebar" data-screen="welcome">
+  <div class="screen active main center" id="s-welcome">
+    <div style="font-size: 11px; color: #888; letter-spacing: .8px; text-transform: uppercase;">First-Run Wizard · 1 of 7</div>
+    <h1 style="margin-top: 12px; font-size: 28px;">Welcome to Tricog Bridge</h1>
+    <p class="subtle" style="max-width: 480px; margin-top: 10px;">
+      The on-premise gateway that anonymizes patient PHI locally, routes ECGs to Tricog Cloud
+      for digitization, and forwards reports to your downstream systems.
+    </p>
+    <div class="placeholder" style="width: 380px; height: 140px; display: flex; align-items: center; justify-content: center;">
+      [ product graphic placeholder ]
+    </div>
+    <div style="margin-top: 24px;">
+      <button class="btn" onclick="show('eula')">Get Started →</button>
+    </div>
+    <p style="margin-top: 30px; font-size: 11px; color: #999;">
+      Bridge Install ID will be generated on completion. Admin UI: <code>https://localhost:8443</code>
+    </p>
+  </div>
+</div>
+
+<!-- 2. EULA -->
+<div class="frame no-sidebar" data-screen="eula">
+  <div class="screen active main">
+    <div class="stepper">
+      <span class="s done">1 Welcome</span>
+      <span class="s cur">2 EULA</span>
+      <span class="s">3 Cloud Mode</span>
+      <span class="s">4 API Key</span>
+      <span class="s">5 Preferences</span>
+      <span class="s">6 Plugins</span>
+      <span class="s">7 Complete</span>
+    </div>
+    <h1>End-User License Agreement</h1>
+    <p class="subtle">EULA v3 · Tricog Bridge v1.0.0</p>
+
+    <div class="panel" style="height: 320px; overflow-y: auto;">
+      <p><b>Tricog Bridge — End-User License Agreement</b></p>
+      <p style="margin-top: 8px;">This EULA governs your installation and use of Tricog Bridge ("Bridge"), an open-source
+      on-premise gateway distributed by Tricog Health PTE. LTD ("Tricog") under the terms below.</p>
+      <h3>1. License grant</h3>
+      <p>Subject to your acceptance of this EULA, Tricog grants you a non-exclusive, non-transferable license to install
+      and operate Bridge on hardware controlled by your organization for the purpose of routing ECG data...</p>
+      <h3>2. PHI handling and on-premise anonymization</h3>
+      <p>Bridge anonymizes patient PHI locally before any transmission outside the provider's premises. The PHI Verification
+      Gate is enabled by default and is not administratively disableable...</p>
+      <h3>3. Audit and compliance</h3>
+      <p>Bridge writes a tamper-evident, hash-chained audit log retained for three (3) years. Signed exports may be
+      generated at any time for compliance review...</p>
+      <p style="color: #999; font-style: italic; margin-top: 10px;">[ ... full text shipped inside the Bridge image ... ]</p>
+    </div>
+
+    <div class="checkbox" style="margin-top: 16px;">
+      <input type="checkbox" id="eulaAccept">
+      <div>
+        <div class="lbl">I have read and accept the Tricog Bridge EULA (v3)</div>
+        <div class="copy">Acceptance is recorded with EULA version, timestamp, and Bridge Install ID in the local audit log.</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('welcome')">← Back</button>
+      <button class="btn" onclick="show('cloudmode')">I Accept →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Cloud Mode -->
+<div class="frame no-sidebar" data-screen="cloudmode">
+  <div class="screen active main">
+    <div class="stepper">
+      <span class="s done">1</span><span class="s done">2</span>
+      <span class="s cur">3 Cloud Mode</span>
+      <span class="s">4 API Key</span><span class="s">5 Preferences</span><span class="s">6 Plugins</span><span class="s">7 Complete</span>
+    </div>
+    <h1>Choose your operating mode</h1>
+    <p class="subtle">You can change individual device modes later. This sets the default for the wizard.</p>
+
+    <div class="grid2" style="margin-top: 8px;">
+      <div class="panel" style="cursor:pointer; border: 2px solid #2c5fa8;" onclick="show('apikey')">
+        <h3 style="margin-top:0;">⬢ Link to Tricog Cloud <span class="badge b-info">Default</span></h3>
+        <p style="font-size: 12px; color: #555;">Anonymized ECGs are sent to Tricog Cloud for digitization, then reconciled
+        on-premise and forwarded to your destinations.</p>
+        <ul style="font-size: 12px; color: #555; margin: 10px 0 0 18px;">
+          <li>Requires a pre-provisioned API key from Tricog Tech Team</li>
+          <li>Postpaid billing tier</li>
+          <li>Devices can still be added in No Cloud mode later</li>
+        </ul>
+      </div>
+
+      <div class="panel" style="cursor:pointer;" onclick="show('prefs')">
+        <h3 style="margin-top:0;">◯ No Cloud mode only</h3>
+        <p style="font-size: 12px; color: #555;">Reports are forwarded directly from your source devices to your destinations.
+        No data leaves your premises.</p>
+        <ul style="font-size: 12px; color: #555; margin: 10px 0 0 18px;">
+          <li>Skips API key entry</li>
+          <li>Source devices must already produce a usable report</li>
+          <li>Destinations classified <i>Off-Premises</i> still pass through the PHI Gate</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn ghost" onclick="show('eula')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. API Key Entry -->
+<div class="frame no-sidebar" data-screen="apikey">
+  <div class="screen active main">
+    <div class="stepper">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span>
+      <span class="s cur">4 API Key</span>
+      <span class="s">5 Preferences</span><span class="s">6 Plugins</span><span class="s">7 Complete</span>
+    </div>
+    <h1>Enter your API Key</h1>
+    <p class="subtle">Your API Key is provisioned by Tricog's technical team and provided to you before installation
+    (typically by email or secure handover).</p>
+
+    <div class="alert info">
+      ℹ Don't have a key? Contact your Tricog account manager. There is no self-serve sign-up portal in this configuration. All accounts in this Bridge configuration are on the Postpaid tier; any other tier is rejected with the message <i>"This Bridge configuration supports Postpaid accounts only — contact Tricog Support."</i>
+    </div>
+
+    <div class="field">
+      <label>API Key</label>
+      <input type="text" placeholder="tcgk_live_••••••••••••••••••••" value="tcgk_live_••••••••••••••••••••">
+      <div class="hint">Paste the key exactly as provided. It will be validated with Tricog Cloud.</div>
+    </div>
+
+    <div class="panel" style="border-style: dashed;">
+      <h3 style="margin-top:0;">After successful validation, this panel will show:</h3>
+      <div class="kv" style="margin-top: 8px;">
+        <div class="k">Masked Key</div>          <div class="v"><code>tcgk_live_••••••••cd4f</code></div>
+        <div class="k">Organization</div>        <div class="v">Apollo Diagnostics — Bangalore Whitefield</div>
+        <div class="k">API Tier</div>            <div class="v"><span class="badge b-info">Postpaid</span></div>
+        <div class="k">Issued At</div>           <div class="v">2026-04-22 14:08 IST</div>
+        <div class="k">Bridge Install Binding</div><div class="v">bridge-install-7f4a-b219-…</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('cloudmode')">← Back</button>
+      <button class="btn" onclick="show('prefs')">Validate &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Preferences -->
+<div class="frame no-sidebar" data-screen="prefs">
+  <div class="screen active main">
+    <div class="stepper">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span>
+      <span class="s cur">5 Preferences</span>
+      <span class="s">6 Plugins</span><span class="s">7 Complete</span>
+    </div>
+    <h1>Set your install preferences</h1>
+    <p class="subtle">Heartbeat and Auto-Update default ON. Local admin credentials are required.</p>
+
+    <h2>Heartbeat</h2>
+    <div class="checkbox">
+      <input type="checkbox" checked>
+      <div>
+        <div class="lbl">Send anonymized heartbeat telemetry to Tricog Cloud</div>
+        <div class="copy">Sends version, uptime, error counters, queue depths every 5 minutes. No PHI, no configuration.
+        Used by Tricog Support to detect install outages and respond proactively.</div>
+      </div>
+    </div>
+
+    <h2>Auto-Update</h2>
+    <div class="checkbox">
+      <input type="checkbox" checked>
+      <div>
+        <div class="lbl">Automatically install signed Tricog Bridge updates</div>
+        <div class="copy">Updates are signed by Tricog and verified before install. Major-version updates always require manual confirmation.</div>
+      </div>
+    </div>
+
+    <h2>Admin UI Credentials</h2>
+    <div class="field row">
+      <div>
+        <label>Username</label>
+        <input type="text" value="admin">
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" value="••••••••••••">
+      </div>
+    </div>
+    <div class="field">
+      <label>Confirm Password</label>
+      <input type="password" value="••••••••••••">
+    </div>
+    <div class="checkbox">
+      <input type="checkbox">
+      <div>
+        <div class="lbl">Enable TOTP-based MFA for admin UI logins (optional)</div>
+        <div class="copy">A QR code will be shown after install. MFA is optional in v1; mandatory MFA for Postpaid accounts is deferred to v2.</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('cloudmode')">← Back</button>
+      <button class="btn" onclick="show('plugins')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Plugins -->
+<div class="frame no-sidebar" data-screen="plugins">
+  <div class="screen active main">
+    <div class="stepper">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span><span class="s done">5</span>
+      <span class="s cur">6 Plugins</span>
+      <span class="s">7 Complete</span>
+    </div>
+    <h1>Plugin Management</h1>
+    <p class="subtle">Plugins are signature-verified before loading. Add additional plugins now or later from the admin UI.</p>
+
+    <h3>Device Parsers</h3>
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Version</th><th>Signature</th><th>State</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Tricog Communicator (Generic)</td><td>1.4.2</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+        <tr><td>BPL Cardiart 9108</td><td>1.1.0</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+        <tr><td>GE MAC 600 (direct network)</td><td>0.9.3</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+        <tr><td>Schiller Cardiovit AT-1</td><td>0.7.0</td><td>✓ Tricog</td><td>Available</td><td><button class="btn ghost sm">Install</button></td></tr>
+        <tr><td>Other (custom)</td><td>—</td><td>—</td><td>—</td><td><span style="color:#888;font-size:11px;">Configured per-device</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 20px;">Cloud Adapters</h3>
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Version</th><th>Signature</th><th>State</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Tricog Cloud (default)</td><td>1.0.0</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 20px;">Destination Connectors</h3>
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Version</th><th>Signature</th><th>State</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>HTTPS Webhook</td><td>1.0.0</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+        <tr><td>SFTP</td><td>1.0.0</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+        <tr><td>FTP / FTPS</td><td>1.0.0</td><td>✓ Tricog</td><td><span class="badge b-info">Installed by default</span></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 14px;">
+      <button class="btn ghost sm">+ Browse Tricog Plugin Catalog</button>
+      <button class="btn ghost sm">+ Install from Signed File</button>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('prefs')">← Back</button>
+      <button class="btn" onclick="show('installdone')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Install Complete -->
+<div class="frame no-sidebar" data-screen="installdone">
+  <div class="screen active main center">
+    <div style="font-size: 32px;">✓</div>
+    <h1 style="margin-top: 8px;">Install Complete</h1>
+    <p class="subtle" style="max-width: 480px;">Tricog Bridge is running and ready to onboard your first source device.</p>
+
+    <div class="panel" style="text-align: left; min-width: 460px;">
+      <div class="kv">
+        <div class="k">Bridge Install ID</div><div class="v"><code>bridge-install-7f4a-b219-9c8e-44d2</code></div>
+        <div class="k">Cloud Mode (default)</div><div class="v">Link to Tricog Cloud · <span class="badge b-info">Postpaid</span></div>
+        <div class="k">Heartbeat</div><div class="v"><span class="badge b-live">On</span></div>
+        <div class="k">Auto-Update</div><div class="v"><span class="badge b-live">On</span></div>
+        <div class="k">Admin UI URL</div><div class="v"><code>https://localhost:8443</code></div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; display: flex; gap: 10px;">
+      <button class="btn ghost" onclick="show('devices')">Go to Dashboard</button>
+      <button class="btn" onclick="show('dev1')">+ Add Your First Device</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- ADMIN UI (with sidebar) -->
+<!-- ============================================================ -->
+
+<!-- Devices List -->
+<div class="frame" data-screen="devices">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:4px;">3</span></a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a onclick="show('account')">👤 Account &amp; Data</a>
+    <a>🔌 Plugins</a>
+    <a>⚡ Heartbeat &amp; Updates</a>
+    <div class="install-id"><b>Bridge Install ID</b><code>bridge-install-7f4a-b219</code></div>
+  </div>
+  <div class="screen active main">
+    <h1>Devices</h1>
+    <p class="subtle">All source devices configured on this Tricog Bridge install.</p>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Search devices…" style="width: 220px;">
+      <select><option>All modes</option><option>Tricog Cloud</option><option>No Cloud</option></select>
+      <select><option>All states</option><option>Onboarding</option><option>Live</option><option>Disabled</option></select>
+      <select><option>All flags</option><option>Re-Dry-Run Required</option><option>Archived</option></select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="show('dev1')">+ Add Device</button>
+    </div>
+
+    <p style="font-size:11px;color:#888;margin-bottom:6px;">Bridge device states: <b>Onboarding</b> / <b>Live</b> / <b>Disabled</b>. <b>Re-Dry-Run Required</b> and <b>Archived</b> are flags on a state, not states themselves (see Section 1.7 of PRD).</p>
+
+    <table class="tbl">
+      <thead>
+        <tr><th>Device</th><th>Profile</th><th>Mode</th><th>State</th><th>Flags</th><th>Last ECG</th><th>Center</th></tr>
+      </thead>
+      <tbody>
+        <tr onclick="show('devdetail')">
+          <td><b>ECG-Reception-A</b><div style="font-size:11px;color:#888;">Reception · Floor 1</div></td>
+          <td>BPL Cardiart 9108</td><td>Tricog Cloud</td>
+          <td><span class="badge b-live">Live</span></td>
+          <td>—</td>
+          <td>2 min ago</td>
+          <td><code>ctr_8a91ec</code></td>
+        </tr>
+        <tr onclick="show('devdetail')">
+          <td><b>ECG-Cardio-OPD</b><div style="font-size:11px;color:#888;">Cardiology OPD</div></td>
+          <td>GE MAC 600 (direct)</td><td>Tricog Cloud</td>
+          <td><span class="badge b-live">Live</span></td>
+          <td>—</td>
+          <td>14 min ago</td>
+          <td><code>ctr_4f02ad</code></td>
+        </tr>
+        <tr>
+          <td><b>ECG-Onboarding-New</b><div style="font-size:11px;color:#888;">OPD Bay 2 · added 5 min ago</div></td>
+          <td>BPL Cardiart 9108</td><td>Tricog Cloud</td>
+          <td><span class="badge b-info">Onboarding</span></td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><b>ECG-ICU-3</b><div style="font-size:11px;color:#888;">ICU Bay 3</div></td>
+          <td>Schiller AT-1</td><td>No Cloud</td>
+          <td><span class="badge b-live">Live</span></td>
+          <td><span class="badge b-warn">Re-Dry-Run Required</span></td>
+          <td>3 hr ago</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><b>ECG-Mobile-Van-1</b><div style="font-size:11px;color:#888;">Mobile screening van</div></td>
+          <td>Tricog Communicator</td><td>Tricog Cloud</td>
+          <td><span class="badge b-disabled">Disabled</span></td>
+          <td>—</td>
+          <td>2 days ago</td>
+          <td><code>ctr_9c4b21</code></td>
+        </tr>
+        <tr>
+          <td><b>ECG-Aux-Old</b><div style="font-size:11px;color:#888;">Decommissioned Q1</div></td>
+          <td>Other (custom)</td><td>Tricog Cloud</td>
+          <td><span class="badge b-disabled">Disabled</span></td>
+          <td><span class="badge b-archived">Archived</span></td>
+          <td>34 days ago</td>
+          <td><code>ctr_1a8801</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Device Step 1: Name -->
+<div class="frame" data-screen="dev1">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a onclick="show('account')">👤 Account &amp; Data</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s cur">1 Name</span><span class="s">2 Profile</span><span class="s">3 Identity</span>
+      <span class="s">4 Anonymization</span><span class="s">5 Cloud Mode</span><span class="s">6 Destinations</span>
+      <span class="s">7 Review</span><span class="s">8 Dry-Run</span><span class="s">9 Go Live</span>
+    </div>
+
+    <h2>Step 1 — Name &amp; Location</h2>
+    <div class="field">
+      <label>Device Name <span style="color:#c0392b;">*</span></label>
+      <input type="text" value="ECG-Reception-A">
+      <div class="hint">A persistent handle used in audit logs and the Devices list.</div>
+    </div>
+    <div class="field">
+      <label>Location Label (optional)</label>
+      <input type="text" value="Reception · Floor 1">
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('devices')">Cancel</button>
+      <button class="btn" onclick="show('dev2')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Device Profile -->
+<div class="frame" data-screen="dev2">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s cur">2 Profile</span><span class="s">3</span><span class="s">4</span>
+      <span class="s">5</span><span class="s">6</span><span class="s">7</span><span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 2 — Device Profile</h2>
+    <p class="subtle">Pick the profile that matches your source-side configuration. Profiles are populated from your installed Device Parser plugins.</p>
+
+    <div class="field">
+      <label>Profile</label>
+      <select>
+        <optgroup label="ECG machine + Tricog communicator">
+          <option>Tricog Communicator (Generic)</option>
+        </optgroup>
+        <optgroup label="ECG machine + third-party communicator">
+          <option>Schiller Cardiovit AT-1 (via 3rd-party comm)</option>
+        </optgroup>
+        <optgroup label="ECG machine with direct network transmission">
+          <option selected>BPL Cardiart 9108</option>
+          <option>GE MAC 600 (direct)</option>
+        </optgroup>
+        <option>— Other (custom) —</option>
+      </select>
+      <div class="hint">Need a profile that's not listed? <a onclick="show('plugins')">Install a plugin</a> or pick <i>Other (custom)</i>.</div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">BPL Cardiart 9108 — defaults</h3>
+      <div class="kv" style="margin-top:6px;">
+        <div class="k">Expected data format</div><div class="v">SCP-ECG (binary)</div>
+        <div class="k">Serial pattern</div><div class="v"><code>BPL-9108-[A-Z0-9]{8}</code></div>
+        <div class="k">Parser plugin</div><div class="v">BPL Cardiart 9108 v1.1.0 ✓</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev1')">← Back</button>
+      <button class="btn" onclick="show('dev3')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Identity -->
+<div class="frame" data-screen="dev3">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s cur">3 Identity</span>
+      <span class="s">4</span><span class="s">5</span><span class="s">6</span><span class="s">7</span><span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 3 — Device Identity (Location Slug)</h2>
+    <p class="subtle">Assign a unique URL slug for this device. The source device or communicator pushes raw ECGs to its own per-device URL. No identity field is read from the payload.</p>
+
+    <div class="field">
+      <label>Location Slug <span style="color:#c0392b;">*</span></label>
+      <input type="text" value="RECEPTION_A">
+      <div class="hint">URL-safe identifier · <code>[A-Za-z0-9_-]{2,32}</code> · must be unique within this Bridge install</div>
+    </div>
+
+    <div class="panel" style="border-style: dashed;">
+      <h3 style="margin-top:0;">Per-device Ingest URL</h3>
+      <div style="font-family: Menlo, monospace; font-size: 13px; padding: 10px; background: #fff; border: 1px solid #d8d8d8;">
+        https://bridge.local:8444/push/<b style="color:#2c5fa8;">RECEPTION_A</b>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn ghost sm">📋 Copy URL</button>
+        <button class="btn ghost sm">⬇ Download config snippet</button>
+      </div>
+      <p style="font-size:11px;color:#777;margin-top:10px;">Configure your ECG machine or communicator to POST raw ECGs to this exact URL. Backend route is a single <code>/push/:location</code> handler — the path parameter is the device identity.</p>
+    </div>
+
+    <div class="alert info">
+      Payloads to an unknown slug return HTTP 404, are written to the audit log with the unknown slug and source IP, and surface as an alert in the Devices list.
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev2')">← Back</button>
+      <button class="btn" onclick="show('dev4')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Anonymization -->
+<div class="frame" data-screen="dev4">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span>
+      <span class="s cur">4 Anonymization</span>
+      <span class="s">5</span><span class="s">6</span><span class="s">7</span><span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 4 — Anonymization</h2>
+    <p class="subtle">Configure which PHI fields are stripped on-premise before transmission, and how they're reconciled on return.</p>
+
+    <table class="tbl">
+      <thead><tr><th style="width:30%;">PHI Field</th><th>Action</th><th>Reconcile on return</th></tr></thead>
+      <tbody>
+        <tr><td>Patient Name</td>
+          <td><select><option selected>Strip</option><option>Hash</option><option>Pass through</option></select></td>
+          <td><input type="checkbox" checked> Re-insert from local PHI store</td></tr>
+        <tr><td>Date of Birth</td>
+          <td><select><option selected>Strip</option><option>Hash</option><option>Pass through</option></select></td>
+          <td><input type="checkbox" checked> Re-insert</td></tr>
+        <tr><td>Patient ID (MRN)</td>
+          <td><select><option>Strip</option><option selected>Hash</option><option>Pass through</option></select></td>
+          <td><input type="checkbox" checked> Re-insert</td></tr>
+        <tr><td>Phone Number</td>
+          <td><select><option selected>Strip</option></select></td>
+          <td><input type="checkbox"> Drop entirely</td></tr>
+        <tr><td>Address</td>
+          <td><select><option selected>Strip</option></select></td>
+          <td><input type="checkbox"> Drop entirely</td></tr>
+        <tr><td>Free-text notes</td>
+          <td><select><option>Strip</option><option selected>Regex-redact</option></select></td>
+          <td><input type="checkbox" checked> Re-insert redacted text</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert">
+      ⚠ The PHI Verification Gate will inspect every outbound payload after anonymization. Detected PHI quarantines the payload and blocks transmission. The Gate is not administratively disableable.
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev3')">← Back</button>
+      <button class="btn" onclick="show('dev5')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5: Cloud Mode -->
+<div class="frame" data-screen="dev5">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span>
+      <span class="s cur">5 Cloud Mode</span>
+      <span class="s">6</span><span class="s">7</span><span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 5 — Cloud Mode</h2>
+
+    <div class="grid2">
+      <div class="panel" style="border:2px solid #2c5fa8; cursor:pointer;">
+        <h3 style="margin-top:0;">⬢ Tricog Cloud <span class="badge b-info">Default</span></h3>
+        <p style="font-size:12px;color:#555;">Anonymized payloads are sent to Tricog Cloud for digitization, reconciled
+        on-premise, then forwarded to destinations.</p>
+        <p style="font-size:11px;color:#888;margin-top:8px;">A Tricog Cloud center will be auto-provisioned in Step 7.</p>
+      </div>
+      <div class="panel" style="cursor:pointer;">
+        <h3 style="margin-top:0;">◯ No Cloud</h3>
+        <p style="font-size:12px;color:#555;">Tricog Bridge forwards source reports directly to destinations.
+        No data leaves the premises.</p>
+        <p style="font-size:11px;color:#888;margin-top:8px;">No Tricog Cloud center is created.</p>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev4')">← Back</button>
+      <button class="btn" onclick="show('dev6')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6: Destinations -->
+<div class="frame" data-screen="dev6">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span><span class="s done">5</span>
+      <span class="s cur">6 Destinations</span>
+      <span class="s">7</span><span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 6 — Destinations</h2>
+    <p class="subtle">Add one or more destination systems. Each destination has its own protocol, endpoint, and authentication.</p>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Destination 1 — HIS Webhook</h3>
+        <span class="badge b-info">On-Premises</span>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Destination Protocol</label>
+        <select><option selected>HTTPS (POST to webhook)</option><option>SFTP</option><option>FTPS</option><option>FTP</option></select>
+      </div>
+      <div class="field">
+        <label>Webhook URL</label>
+        <input type="text" value="https://his.local.apollo.in:8443/ingest/ecg">
+      </div>
+      <div class="field row">
+        <div>
+          <label>Auth Method</label>
+          <select><option selected>Bearer Token</option><option>HMAC</option><option>mTLS</option></select>
+        </div>
+        <div>
+          <label>Token</label>
+          <input type="password" value="••••••••••••••••">
+        </div>
+      </div>
+      <div class="field">
+        <label>Success status codes</label>
+        <input type="text" value="200, 201, 202">
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Destination 2 — EMR SFTP Drop</h3>
+        <span class="badge b-warn">Off-Premises (PHI Gate applies)</span>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Destination Protocol</label>
+        <select><option>HTTPS</option><option selected>SFTP</option><option>FTPS</option><option>FTP</option></select>
+      </div>
+      <div class="field row">
+        <div><label>Host</label><input type="text" value="emr-sftp.partner.example"></div>
+        <div><label>Port</label><input type="text" value="22"></div>
+      </div>
+      <div class="field"><label>Remote path</label><input type="text" value="/incoming/ecg/"></div>
+      <div class="field"><label>Filename template</label><input type="text" value="ecg_{guid}_{yyyymmdd-hhmmss}.pdf"></div>
+      <div class="field row">
+        <div><label>Username</label><input type="text" value="apollo"></div>
+        <div><label>SSH Private Key</label><input type="text" value="(uploaded · fingerprint SHA256:Y4l…)"></div>
+      </div>
+    </div>
+
+    <button class="btn ghost sm">+ Add Destination</button>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev5')">← Back</button>
+      <button class="btn" onclick="show('dev7')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 7: Review & Auto-Provision -->
+<div class="frame" data-screen="dev7">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span><span class="s done">5</span><span class="s done">6</span>
+      <span class="s cur">7 Review</span>
+      <span class="s">8</span><span class="s">9</span>
+    </div>
+
+    <h2>Step 7 — Review &amp; Auto-Provision</h2>
+    <p class="subtle">Tricog Bridge will create a Tricog Cloud center on your behalf with the destination bindings shown below.</p>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Device</h3>
+      <div class="kv">
+        <div class="k">Name</div><div class="v">ECG-Reception-A</div>
+        <div class="k">Location</div><div class="v">Reception · Floor 1</div>
+        <div class="k">Profile</div><div class="v">BPL Cardiart 9108</div>
+        <div class="k">Location Slug</div><div class="v"><code>RECEPTION_A</code></div>
+        <div class="k">Ingest URL</div><div class="v"><code>https://bridge.local:8444/push/RECEPTION_A</code></div>
+        <div class="k">Anonymization</div><div class="v">6 fields configured (Strip × 4, Hash × 1, Regex-redact × 1)</div>
+        <div class="k">Cloud Mode</div><div class="v">Tricog Cloud</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Tricog Cloud Center (preview)</h3>
+      <div class="kv">
+        <div class="k">Center Name</div><div class="v">ECG-Reception-A</div>
+        <div class="k">API Tier</div><div class="v"><span class="badge b-info">Postpaid</span></div>
+        <div class="k">Webhook Bindings</div><div class="v">2 destinations (HTTPS, SFTP)</div>
+      </div>
+    </div>
+
+    <div class="alert info">
+      Clicking <b>Provision Center</b> will call the Tricog Cloud API. The Center ID will be displayed below on success.
+      On failure, the exact API error will be shown with a Retry option.
+    </div>
+
+    <div class="panel dashed" id="provisionResult" style="display:none;">
+      <span class="badge b-live">✓ Provisioned</span>
+      <div class="kv" style="margin-top:8px;">
+        <div class="k">Center ID</div><div class="v"><code>ctr_8a91ec_4d2f</code></div>
+        <div class="k">Provisioned At</div><div class="v">2026-04-22 14:21 IST</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev6')">← Back</button>
+      <button class="btn ghost" onclick="document.getElementById('provisionResult').style.display='block';">Provision Center</button>
+      <button class="btn" onclick="show('dev8')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 8: Dry-Run -->
+<div class="frame" data-screen="dev8">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span><span class="s done">5</span><span class="s done">6</span><span class="s done">7</span>
+      <span class="s cur">8 Dry-Run</span>
+      <span class="s">9</span>
+    </div>
+
+    <h2>Step 8 — Dry-Run</h2>
+    <p class="subtle">A canned sample ECG is run through the full pipeline. Go Live unlocks only after a successful dry-run.</p>
+
+    <div class="pipeline">
+      <div class="step ok">✓ Ingest</div>
+      <div class="step ok">✓ Identity Resolve</div>
+      <div class="step ok">✓ Anonymize</div>
+      <div class="step ok">✓ PHI Gate</div>
+      <div class="step ok">✓ Tricog Cloud</div>
+      <div class="step ok">✓ Reconcile</div>
+      <div class="step ok">✓ Destination 1</div>
+      <div class="step ok">✓ Destination 2</div>
+    </div>
+
+    <div class="alert ok">✓ Dry-run passed at 2026-04-22 14:24:08 IST. Both destinations confirmed receipt of the reconciled report. Go Live is now available.</div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Step Outcomes</h3>
+      <table class="tbl">
+        <thead><tr><th>Step</th><th>Outcome</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Ingest</td><td><span class="badge b-live">OK</span></td><td>Sample SCP-ECG payload accepted (412 KB)</td></tr>
+          <tr><td>Identity Resolve</td><td><span class="badge b-live">OK</span></td><td>Location slug resolved: RECEPTION_A → device "ECG-Reception-A"</td></tr>
+          <tr><td>Anonymize</td><td><span class="badge b-live">OK</span></td><td>6 fields stripped/hashed; PHI written to local store</td></tr>
+          <tr><td>PHI Gate</td><td><span class="badge b-live">OK</span></td><td>Outbound payload clean</td></tr>
+          <tr><td>Tricog Cloud submit</td><td><span class="badge b-live">OK</span></td><td>Postpaid · GUID returned in 1.8s</td></tr>
+          <tr><td>Reconcile</td><td><span class="badge b-live">OK</span></td><td>PHI re-inserted from local mapping</td></tr>
+          <tr><td>Destination 1 (HTTPS)</td><td><span class="badge b-live">OK</span></td><td>HTTP 200 from his.local.apollo.in</td></tr>
+          <tr><td>Destination 2 (SFTP)</td><td><span class="badge b-live">OK</span></td><td>File uploaded · 412 KB · checksum verified</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev7')">← Back</button>
+      <button class="btn ghost">Re-run Dry-Run</button>
+      <button class="btn" onclick="show('dev9')">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 9: Go Live -->
+<div class="frame" data-screen="dev9">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ Add Device</p>
+    <h1>Add Device</h1>
+    <div class="stepper" style="margin-top:14px;">
+      <span class="s done">1</span><span class="s done">2</span><span class="s done">3</span><span class="s done">4</span><span class="s done">5</span><span class="s done">6</span><span class="s done">7</span><span class="s done">8</span>
+      <span class="s cur">9 Go Live</span>
+    </div>
+
+    <h2>Step 9 — Go Live</h2>
+    <p class="subtle">Once toggled live, this device begins accepting real ECG traffic.</p>
+
+    <div class="panel">
+      <div class="kv">
+        <div class="k">Device</div><div class="v">ECG-Reception-A</div>
+        <div class="k">Mode</div><div class="v">Tricog Cloud</div>
+        <div class="k">Center ID</div><div class="v"><code>ctr_8a91ec_4d2f</code></div>
+        <div class="k">Dry-Run</div><div class="v"><span class="badge b-live">Passed · 2026-04-22 14:24:08</span></div>
+      </div>
+    </div>
+
+    <div class="checkbox">
+      <input type="checkbox" checked>
+      <div>
+        <div class="lbl">Toggle device to LIVE</div>
+        <div class="copy">The device will start accepting POSTs at its ingest URL and routing payloads. Audit log entries will be written for every transaction.</div>
+      </div>
+    </div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('dev8')">← Back</button>
+      <button class="btn" onclick="show('devices')">Go Live ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Device Detail -->
+<div class="frame" data-screen="devdetail">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a onclick="show('account')">👤 Account &amp; Data</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ ECG-Reception-A</p>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <h1 style="margin-right:4px;">ECG-Reception-A</h1>
+      <span style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.4px;">Bridge state</span>
+      <span class="badge b-live">Live</span>
+      <span style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;">Flags</span>
+      <span style="color:#777;font-size:11px;">none</span>
+    </div>
+    <p class="subtle">Reception · Floor 1 · Last ECG 2 min ago</p>
+
+    <p style="font-size:11px;color:#888;margin-top:-8px;margin-bottom:14px;">Bridge device states: Onboarding / Live / Disabled (mutually exclusive). Re-Dry-Run Required and Archived are flags on a state. See PRD Section 1.7.</p>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0;">Configuration</h3>
+        <div class="kv">
+          <div class="k">Profile</div><div class="v">BPL Cardiart 9108</div>
+          <div class="k">Location Slug</div><div class="v"><code>RECEPTION_A</code></div>
+          <div class="k">Ingest URL</div><div class="v"><code>https://bridge.local:8444/push/RECEPTION_A</code> <a style="font-size:11px;">📋 copy</a></div>
+          <div class="k">Anonymization</div><div class="v">6 fields · Strip × 4, Hash × 1, Redact × 1</div>
+          <div class="k">Cloud Mode</div><div class="v">Tricog Cloud · <span class="badge b-info">Postpaid</span></div>
+          <div class="k">Center ID</div><div class="v"><code>ctr_8a91ec_4d2f</code></div>
+          <div class="k">Cloud-side Center State</div><div class="v"><span class="badge b-live">Active</span> <span style="font-size:11px;color:#888;">— surfaced as a banner if Archived (Manual / Inactivity) or PermanentlyArchived (Deleted)</span></div>
+          <div class="k">Last Dry-Run</div><div class="v">2026-04-22 14:24 — Passed</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0;">Destinations (2)</h3>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Protocol</th><th>Last Status</th></tr></thead>
+          <tbody>
+            <tr><td>HIS Webhook</td><td>HTTPS</td><td><span class="badge b-live">200</span></td></tr>
+            <tr><td>EMR SFTP Drop</td><td>SFTP</td><td><span class="badge b-live">Uploaded</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Last 24 hours</h3>
+      <div style="display:flex;gap:32px;font-size:13px;">
+        <div><div style="font-size:22px;font-weight:600;">347</div><div style="color:#777;font-size:11px;">ECGs ingested</div></div>
+        <div><div style="font-size:22px;font-weight:600;">694</div><div style="color:#777;font-size:11px;">deliveries (2 dest × 347)</div></div>
+        <div><div style="font-size:22px;font-weight:600;color:#155724;">99.7%</div><div style="color:#777;font-size:11px;">delivery success</div></div>
+        <div><div style="font-size:22px;font-weight:600;color:#856404;">2</div><div style="color:#777;font-size:11px;">in retry</div></div>
+      </div>
+    </div>
+
+    <h2>Actions</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="show('devedit')">Edit</button>
+      <button class="btn ghost">Disable</button>
+      <button class="btn ghost">Re-Run Dry-Run</button>
+      <button class="btn ghost">Archive</button>
+      <button class="btn warn">Delete</button>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:8px;">
+      <b>Edit</b> — pipeline-affecting changes set the Re-Dry-Run Required flag (PRD 3.36).
+      <b>Disable</b> — transitions to Disabled state (PRD 3.37).
+      <b>Archive</b> — lifecycle action: transitions to Disabled, locks config, marks cloud center Archived (Manual) (PRD 3.38).
+      <b>Delete</b> — destructive, marks cloud center PermanentlyArchived (Deleted) (PRD 3.39).
+    </p>
+  </div>
+</div>
+
+<!-- Edit Device -->
+<div class="frame" data-screen="devedit">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a class="active" onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+  </div>
+  <div class="screen active main">
+    <p style="font-size:11px;color:#888;"><a onclick="show('devices')">Devices</a> ▸ <a onclick="show('devdetail')">ECG-Reception-A</a> ▸ Edit</p>
+    <h1>Edit Device — ECG-Reception-A</h1>
+
+    <div class="alert">⚠ Pipeline-affecting changes (profile, Location Slug, anonymization rules, cloud mode, destinations, or destination classification in No Cloud mode) set the <b>Re-Dry-Run Required</b> flag on this device. The device's Bridge state is unchanged (a Live device stays Live with the flag set; a Disabled device stays Disabled with the flag set), but ingest is paused on Live devices while the flag is set. The flag is cleared only by recording a passing Dry-Run. Non-pipeline-affecting changes (name and location label) save without setting the flag.</div>
+
+    <h2>Name &amp; Location</h2>
+    <div class="field row">
+      <div><label>Device Name</label><input type="text" value="ECG-Reception-A"></div>
+      <div><label>Location Label</label><input type="text" value="Reception · Floor 1"></div>
+    </div>
+
+    <h2>Profile &amp; Identity</h2>
+    <div class="field"><label>Profile</label><select><option selected>BPL Cardiart 9108</option></select></div>
+    <div class="field">
+      <label>Location Slug</label>
+      <input type="text" value="RECEPTION_A">
+      <div class="hint">⚠ Changing this invalidates the previous ingest URL. The source device must be reconfigured to push to the new URL before re-enabling traffic.</div>
+    </div>
+    <div class="field">
+      <label>Current Ingest URL</label>
+      <div style="font-family: Menlo, monospace; font-size: 12px; padding: 7px 9px; background: #f3f3f3; border: 1px solid #d8d8d8;">https://bridge.local:8444/push/RECEPTION_A</div>
+    </div>
+
+    <h2>Anonymization</h2>
+    <div class="placeholder">[ same anonymization rules table as Add Device — Step 4 ]</div>
+
+    <h2>Cloud Mode</h2>
+    <div class="field"><label>Mode</label><select><option selected>Tricog Cloud</option><option>No Cloud</option></select></div>
+
+    <h2>Destinations</h2>
+    <div class="placeholder">[ same destinations editor as Add Device — Step 6 ]</div>
+
+    <div class="btnrow right">
+      <button class="btn ghost" onclick="show('devdetail')">Cancel</button>
+      <button class="btn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Failed Deliveries -->
+<div class="frame" data-screen="failed">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a onclick="show('devices')">⚙ Devices</a>
+    <a class="active" onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a onclick="show('account')">👤 Account &amp; Data</a>
+  </div>
+  <div class="screen active main">
+    <h1>Failed Deliveries</h1>
+    <p class="subtle">Items that exhausted the 72-hour retry window are surfaced here in the Dead-Letter Queue. Retry once or discard.</p>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Search by device or destination…" style="width:240px;">
+      <select><option>All devices</option><option>ECG-Reception-A</option></select>
+      <select><option>All destinations</option><option>HIS Webhook</option><option>EMR SFTP Drop</option></select>
+      <div class="spacer"></div>
+      <span style="color:#888;font-size:11px;">3 items in DLQ</span>
+    </div>
+
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Device</th><th>Destination</th><th>Protocol</th><th>First Attempt</th><th>Last Attempt</th><th>Attempts</th><th>Size</th><th>Last Error</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ECG-Cardio-OPD</td>
+          <td>HIS Webhook</td>
+          <td>HTTPS</td>
+          <td>2026-05-05 09:14</td>
+          <td>2026-05-08 09:14</td>
+          <td>11</td>
+          <td>412 KB</td>
+          <td><code>HTTP 502 Bad Gateway</code></td>
+          <td>
+            <button class="btn sm">Retry</button>
+            <button class="btn ghost sm">Discard</button>
+          </td>
+        </tr>
+        <tr>
+          <td>ECG-ICU-3</td>
+          <td>EMR SFTP Drop</td>
+          <td>SFTP</td>
+          <td>2026-05-05 12:02</td>
+          <td>2026-05-08 12:02</td>
+          <td>9</td>
+          <td>388 KB</td>
+          <td><code>SSH auth failed: publickey</code></td>
+          <td>
+            <button class="btn sm">Retry</button>
+            <button class="btn ghost sm">Discard</button>
+          </td>
+        </tr>
+        <tr>
+          <td>ECG-Reception-A</td>
+          <td>EMR SFTP Drop</td>
+          <td>SFTP</td>
+          <td>2026-05-05 14:48</td>
+          <td>2026-05-08 14:48</td>
+          <td>9</td>
+          <td>421 KB</td>
+          <td><code>connection timeout (30s)</code></td>
+          <td>
+            <button class="btn sm">Retry</button>
+            <button class="btn ghost sm">Discard</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#888;margin-top:10px;">Per-row Retry and Discard only. Bulk operations across multiple rows are out of scope for v1 (PRD Requirement 3.31). Both actions require confirmation.</p>
+  </div>
+</div>
+
+<!-- Audit Log -->
+<div class="frame" data-screen="audit">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a class="active" onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a onclick="show('account')">👤 Account &amp; Data</a>
+  </div>
+  <div class="screen active main">
+    <h1>Audit Log</h1>
+    <p class="subtle">Tamper-evident, hash-chained record of all Tricog Bridge pipeline events. Retained for 3 years.</p>
+
+    <div class="toolbar">
+      <label style="font-size:11px;color:#666;">From</label>
+      <input type="text" value="2026-05-01 00:00" style="width:140px;">
+      <label style="font-size:11px;color:#666;">To</label>
+      <input type="text" value="2026-05-08 23:59" style="width:140px;">
+      <select><option>All devices</option><option>ECG-Reception-A</option></select>
+      <select><option>All event types</option><option>Ingest</option><option>PHI Gate</option><option>Cloud Submit</option><option>Reconcile</option><option>Delivery</option><option>DLQ</option><option>Discard</option><option>Config Change</option></select>
+      <select><option>All statuses</option><option>OK</option><option>Failed</option><option>Quarantined</option></select>
+      <div class="spacer"></div>
+      <button class="btn">Export ↓</button>
+    </div>
+
+    <div class="alert info">
+      ℹ Export produces a signed file containing hash-chained entries plus a signature block, signed by this install's keypair (public portion certified by the Tricog Install CA). Verifiable externally.
+    </div>
+
+    <table class="tbl">
+      <thead>
+        <tr><th>Timestamp</th><th>Event</th><th>Device</th><th>Status</th><th>GUID</th><th>Hash</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2026-05-08 14:21:09</td><td>Delivery (HTTPS)</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td><code>g_8af2…b914</code></td><td><code>0x9c4f…e201</code></td></tr>
+        <tr><td>2026-05-08 14:21:08</td><td>Reconcile</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td><code>g_8af2…b914</code></td><td><code>0xb178…42a8</code></td></tr>
+        <tr><td>2026-05-08 14:21:06</td><td>Cloud Submit</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td><code>g_8af2…b914</code></td><td><code>0x4f8c…dd1e</code></td></tr>
+        <tr><td>2026-05-08 14:21:05</td><td>PHI Gate</td><td>ECG-Reception-A</td><td><span class="badge b-live">CLEAN</span></td><td><code>g_8af2…b914</code></td><td><code>0x2208…7704</code></td></tr>
+        <tr><td>2026-05-08 14:21:04</td><td>Anonymize</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td><code>g_8af2…b914</code></td><td><code>0x9912…0044</code></td></tr>
+        <tr><td>2026-05-08 14:21:04</td><td>Ingest</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td><code>g_8af2…b914</code></td><td><code>0x77d1…9b8a</code></td></tr>
+        <tr><td>2026-05-08 13:59:47</td><td>DLQ Move</td><td>ECG-Cardio-OPD</td><td><span class="badge b-fail">FINAL FAIL</span></td><td><code>g_4b91…0ac3</code></td><td><code>0x33ef…c440</code></td></tr>
+        <tr><td>2026-05-08 13:55:22</td><td>PHI Gate</td><td>ECG-ICU-3</td><td><span class="badge b-warn">QUARANTINED</span></td><td><code>g_2f01…aa18</code></td><td><code>0x611c…99fd</code></td></tr>
+        <tr><td>2026-05-08 13:42:11</td><td>Config Change · Edit</td><td>ECG-Reception-A</td><td><span class="badge b-live">OK</span></td><td>—</td><td><code>0x802e…1ba2</code></td></tr>
+        <tr><td>2026-05-08 13:14:00</td><td>Center Recreated (auto)</td><td>ECG-Mobile-Van-1</td><td><span class="badge b-info">INFO</span></td><td>—</td><td><code>0xab19…ff03</code></td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:12px;font-size:11px;color:#888;">Showing 1–10 of 18,422 entries · <a>load more</a></p>
+  </div>
+</div>
+
+<!-- Account & Data -->
+<div class="frame" data-screen="account">
+  <div class="sidebar">
+    <div class="grp">Operations</div>
+    <a onclick="show('devices')">⚙ Devices</a>
+    <a onclick="show('failed')">⚠ Failed Deliveries</a>
+    <a onclick="show('audit')">📜 Audit Log</a>
+    <div class="grp">Settings</div>
+    <a class="active" onclick="show('account')">👤 Account &amp; Data</a>
+    <a>🔌 Plugins</a>
+    <a>⚡ Heartbeat &amp; Updates</a>
+  </div>
+  <div class="screen active main">
+    <h1>Account &amp; Data</h1>
+    <p class="subtle">Account suspension, API key rotation, and account closure are handled by Tricog's technical team in this configuration. Use the actions below to export data or contact Tricog Support. (PRD Requirement 3.41)</p>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Account</h3>
+      <div class="kv">
+        <div class="k">Organization</div><div class="v">Apollo Diagnostics — Bangalore Whitefield</div>
+        <div class="k">API Tier</div><div class="v"><span class="badge b-info">Postpaid</span></div>
+        <div class="k">API Key</div><div class="v"><code>tcgk_live_••••••••cd4f</code></div>
+        <div class="k">Bridge Install ID</div><div class="v"><code>bridge-install-7f4a-b219-9c8e-44d2</code></div>
+        <div class="k">Install-to-Account Bound At</div><div class="v">2026-04-22 14:08 IST</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0;">Export Data <span style="font-size:11px;color:#888;font-weight:400;">(PRD 3.42)</span></h3>
+        <p style="font-size:12px;color:#555;">Opens the Export Data modal. Select datasets, click <b>Generate Archive</b>; output is a single ZIP with a <code>manifest.json</code> listing each member, its size, and SHA-256.</p>
+
+        <div style="border:1px dashed #c0c0c0;background:#fafafa;padding:12px;margin-top:10px;">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Modal preview</div>
+          <div style="font-weight:600;margin-bottom:6px;">Export Data</div>
+          <div class="checkbox"><input type="checkbox" checked><div><div class="lbl">Audit Log</div><div class="copy">Signed, hash-chained export per Requirement 3.33. Optional sub-range.</div></div></div>
+          <div class="checkbox"><input type="checkbox" checked><div><div class="lbl">Device &amp; Center List</div><div class="copy">JSON. Per-device record: name, location, profile, slug, ingest URL, anonymization spec, cloud mode, destinations (secrets redacted), Center ID, state, flags, timestamps. No PHI, no destination credentials, no signing keys.</div></div></div>
+          <div class="checkbox"><input type="checkbox"><div><div class="lbl">API Key Metadata</div><div class="copy">JSON. Masked key, organization, issued-at, Install ID binding, last-validated. <b>No key material.</b></div></div></div>
+          <button class="btn" style="margin-top:10px;">Generate Archive</button>
+          <p style="margin-top:8px;font-size:11px;color:#888;">Synchronous download for installs ≤ 10,000 devices. Async with email link beyond that (link expires after 7 days).</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0;">Contact Tricog Support <span style="font-size:11px;color:#888;font-weight:400;">(PRD 3.43)</span></h3>
+        <p style="font-size:12px;color:#555;">Opens your default mail client with the message below pre-filled. The supported request types are:</p>
+        <ul style="font-size:12px;color:#555;margin: 8px 0 12px 18px;">
+          <li>Account suspension</li>
+          <li>API key rotation</li>
+          <li>Account closure</li>
+        </ul>
+        <button class="btn ghost">📧 Open Pre-filled Support Email</button>
+
+        <div style="border:1px dashed #c0c0c0;background:#fafafa;padding:10px;margin-top:12px;font-family:Menlo,monospace;font-size:11px;">
+          <div><b>To:</b> support@tricog.com</div>
+          <div><b>Subject:</b> [Bridge Install bridge-install-7f4a-b219-9c8e-44d2] Account/Key Action Request</div>
+          <div style="margin-top:6px;color:#555;">Organization: Apollo Diagnostics — Bangalore Whitefield<br>Bridge Install ID: bridge-install-7f4a-b219-9c8e-44d2<br>API Key (masked): tcgk_live_••••••••cd4f<br>Bound at: 2026-04-22 14:08 IST<br><br>Supported requests: Account suspension, API key rotation, Account closure.<br><br>Describe the requested action below this line.<br>————————————</div>
+        </div>
+        <p style="margin-top:10px;font-size:11px;color:#888;">If no <code>mailto:</code> handler is registered, Tricog Bridge shows the same content in a copy-able dialog. The action's initiation is recorded in the Bridge audit log; the email body is not.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- INDEX -->
+<!-- ============================================================ -->
+<div class="index">
+  <h4>Install Wizard (first-run, no sidebar)</h4>
+  <div class="group">
+    <a onclick="show('welcome')">1 · Welcome</a>
+    <a onclick="show('eula')">2 · EULA</a>
+    <a onclick="show('cloudmode')">3 · Cloud Mode Selection</a>
+    <a onclick="show('apikey')">4 · API Key Entry</a>
+    <a onclick="show('prefs')">5 · Preferences</a>
+    <a onclick="show('plugins')">6 · Plugin Management</a>
+    <a onclick="show('installdone')">7 · Install Complete</a>
+  </div>
+  <h4>Admin UI (sidebar nav)</h4>
+  <div class="group">
+    <a onclick="show('devices')">Devices List</a>
+    <a onclick="show('dev1')">+ Add Device — Step 1 (Name)</a>
+    <a onclick="show('dev2')">+ Add Device — Step 2 (Profile)</a>
+    <a onclick="show('dev3')">+ Add Device — Step 3 (Identity)</a>
+    <a onclick="show('dev4')">+ Add Device — Step 4 (Anonymization)</a>
+    <a onclick="show('dev5')">+ Add Device — Step 5 (Cloud Mode)</a>
+    <a onclick="show('dev6')">+ Add Device — Step 6 (Destinations)</a>
+    <a onclick="show('dev7')">+ Add Device — Step 7 (Review)</a>
+    <a onclick="show('dev8')">+ Add Device — Step 8 (Dry-Run)</a>
+    <a onclick="show('dev9')">+ Add Device — Step 9 (Go Live)</a>
+    <a onclick="show('devdetail')">Device Detail</a>
+    <a onclick="show('devedit')">Edit Device</a>
+    <a onclick="show('failed')">Failed Deliveries (DLQ)</a>
+    <a onclick="show('audit')">Audit Log</a>
+    <a onclick="show('account')">Account &amp; Data</a>
+  </div>
+  <p style="color:#888;font-size:11px;margin-top:8px;">
+    Wireframe is illustrative; field labels and primary actions follow <code>Tricogdge_PRD_postpaid.md</code>
+    (Processes 2.1–2.9 and Functional Requirements 3.1–3.40). Data shown is sample.
+  </p>
+</div>
+
+<script>
+  const crumbMap = {
+    welcome: 'Install Wizard · Welcome',
+    eula: 'Install Wizard · EULA',
+    cloudmode: 'Install Wizard · Cloud Mode',
+    apikey: 'Install Wizard · API Key Entry',
+    prefs: 'Install Wizard · Preferences',
+    plugins: 'Install Wizard · Plugins',
+    installdone: 'Install Wizard · Complete',
+    devices: 'Admin UI · Devices',
+    dev1: 'Admin UI · Add Device — Step 1 Name',
+    dev2: 'Admin UI · Add Device — Step 2 Profile',
+    dev3: 'Admin UI · Add Device — Step 3 Identity',
+    dev4: 'Admin UI · Add Device — Step 4 Anonymization',
+    dev5: 'Admin UI · Add Device — Step 5 Cloud Mode',
+    dev6: 'Admin UI · Add Device — Step 6 Destinations',
+    dev7: 'Admin UI · Add Device — Step 7 Review',
+    dev8: 'Admin UI · Add Device — Step 8 Dry-Run',
+    dev9: 'Admin UI · Add Device — Step 9 Go Live',
+    devdetail: 'Admin UI · Device Detail',
+    devedit: 'Admin UI · Edit Device',
+    failed: 'Admin UI · Failed Deliveries',
+    audit: 'Admin UI · Audit Log',
+    account: 'Admin UI · Account & Data'
+  };
+
+  function show(name) {
+    document.querySelectorAll('.frame').forEach(f => {
+      f.style.display = (f.dataset.screen === name) ? '' : 'none';
+    });
+    document.getElementById('crumb').innerHTML = '<b>' + (crumbMap[name] || name) + '</b>';
+    document.getElementById('screenJump').value = name;
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById('screenJump').addEventListener('change', e => show(e.target.value));
+
+  // Default to Welcome
+  show('welcome');
+</script>
+
+</body>
+</html>
